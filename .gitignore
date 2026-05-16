@@ -1,0 +1,18 @@
+# Build output
+bin/
+obj/
+publish/
+
+
+.vs/
+.idea/
+*.user
+*.suo
+
+# dotnet
+*.swp
+project.lock.json
+
+# OS
+Thumbs.db
+desktop.ini
