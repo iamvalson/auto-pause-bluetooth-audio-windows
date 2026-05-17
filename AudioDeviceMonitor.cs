@@ -35,14 +35,20 @@ sealed class AudioDeviceMonitor : IMMNotificationClient, IDisposable
         bool oldGone = !TryGetDevice(old, out var oldDevice);
         string oldName = oldDevice?.FriendlyName ?? "Audio device";
 
-        if (oldGone)
+        // oldGone: device handle is gone entirely.
+        // oldUnavailable: device still in registry (e.g. held open by OBS Application Audio
+        // Capture) but physically disconnected — NotPresent/Unplugged.
+        bool oldUnavailable = oldDevice != null &&
+            oldDevice.State is DeviceState.NotPresent or DeviceState.Unplugged or DeviceState.Disabled;
+
+        if (oldGone || oldUnavailable)
             TryPause($"{oldName} disconnected");
     }
 
     public void OnDeviceStateChanged(string deviceId, DeviceState newState)
     {
         if (deviceId != _activeDeviceId) return;
-        if (newState is DeviceState.NotPresent or DeviceState.Unplugged)
+        if (newState is DeviceState.NotPresent or DeviceState.Unplugged or DeviceState.Disabled)
         {
             string name = TryGetFriendlyName(deviceId) ?? "Audio device";
             TryPause($"{name} disconnected");
